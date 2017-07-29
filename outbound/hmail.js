@@ -6,14 +6,12 @@ var dns          = require('dns');
 var path         = require('path');
 var net          = require('net');
 
-var async       = require('async');
 var Address     = require('address-rfc2821').Address;
 
 var constants   = require('haraka-constants');
 var generic_pool = require('generic-pool');
 var net_utils   = require('haraka-net-utils');
 var utils       = require('haraka-utils');
-var ResultStore = require('haraka-results');
 
 var logger      = require('../logger');
 var config      = require('../config');
@@ -47,6 +45,7 @@ var cfg = require('./config');
 // HMailItem - encapsulates an individual outbound mail item
 
 var dummy_func = function () {};
+
 
 class HMailItem extends events.EventEmitter {
     constructor (filename, filePath, notes) {

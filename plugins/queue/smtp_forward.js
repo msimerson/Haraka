@@ -32,16 +32,6 @@ exports.register = function () {
 
     plugin.register_hook('queue', 'queue_forward');
 
-    if (plugin.cfg.main.check_sender) {
-        plugin.register_hook('mail', 'check_sender');
-    }
-
-    if (plugin.cfg.main.check_recipient) {
-        plugin.register_hook('rcpt', 'check_recipient');
-    }
-
-    plugin.register_hook('queue', 'queue_forward');
-
     if (plugin.cfg.main.enable_outbound) {
         plugin.register_hook('queue_outbound', 'queue_forward');
     }
