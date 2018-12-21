@@ -154,6 +154,7 @@ exports.check_recipient = function (next, connection, params) {
 
     const domain = rcpt.host.toLowerCase();
     if (this.cfg[domain] !== undefined) {
+        txn.notes.local_recipient=domain;
         if (this.set_queue(connection, 'smtp_forward', domain)) {
             txn.results.add(this, {pass: 'rcpt_to'});
             return next(OK);

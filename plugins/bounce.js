@@ -190,7 +190,7 @@ function find_message_id_headers (headers, body, connection, self) {
     }
 
     for (let i=0,l=body.children.length; i < l; i++) {
-        // Recure to any MIME children
+        // Recurse to any MIME children
         find_message_id_headers(headers, body.children[i], connection, self);
     }
 }
@@ -246,7 +246,7 @@ exports.non_local_msgid = function (next, connection) {
     const valid_domains=[];
     for (const domain of domains) {
         const org_dom = tlds.get_organizational_domain(domain);
-        if (!org_dom) { continue; }
+        if (!org_dom) continue;
         valid_domains.push(org_dom);
     }
 
@@ -256,16 +256,17 @@ exports.non_local_msgid = function (next, connection) {
         return next(DENY, `bounce Message-ID without valid domain, I didn't send it.`);
     }
 
+    /* The code below needs a way to say a domain is local.
+        this is hard without knowing how Haraka is configured.
+    */
+
+    // we made it to data, which means some recipient plugin validated the domain
+    // use that.
+    console.log(transaction.rcpt_to[0]);
     return next();
 
-    /* The code below needs some kind of test to say the domain isn't local.
-        this would be hard to do without knowing how you have Haraka configured.
-        e.g. it could be config/host_list, or it could be some other way.
-        - hence I added the return next() above or this test can never be correct.
-    */
     // we wouldn't have accepted the bounce if the recipient wasn't local
-    // transaction.results.add(plugin,
-    //         {fail: 'Message-ID not local', emit: true });
+    // transaction.results.add(plugin, {fail: 'Message-ID not local', emit: true });
     // if (!plugin.cfg.reject.non_local_msgid) return next();
     // return next(DENY, "bounce with non-local Message-ID (RFC 3834)");
 }
@@ -372,8 +373,7 @@ exports.bounce_spf = function (next, connection) {
                 }
             }
         );
-        if (pending === 0 && !aborted) {
-            // No lookups run for some reason
+        if (pending === 0 && !aborted) {        // No lookups run
             return run_cb();
         }
     });
