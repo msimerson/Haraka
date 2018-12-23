@@ -275,7 +275,6 @@ class SMTPClient extends events.EventEmitter {
         });
     }
 
-
     is_dead_sender (plugin, connection) {
         if (connection.transaction) return false;
 
@@ -299,41 +298,46 @@ exports.get_pool = (server, port, host, cfg) => {
     if (!server.notes.pool) server.notes.pool = {};
     if (server.notes.pool[name]) return server.notes.pool[name];
 
-    const pool = generic_pool.Pool({
-        name,
-        create: callback => {
-            const smtp_client = new SMTPClient(port, host, connect_timeout, pool_timeout);
-            logger.logdebug(`[smtp_client_pool] uuid=${smtp_client.uuid} host=${host}` +
-                ` port=${port} pool_timeout=${pool_timeout} created`);
-            callback(null, smtp_client);
-        },
-        destroy: smtp_client => {
-            logger.logdebug(`[smtp_client_pool] ${smtp_client.uuid} destroyed, state={smtp_client.state}`);
-            smtp_client.state = STATE.DESTROYED;
-            smtp_client.socket.destroy();
-            // Remove pool object from server notes once empty
-            const size = pool.getPoolSize();
-            if (size === 0) {
-                delete server.notes.pool[name];
-            }
-        },
-        max: cfg.max_connections || 1000,
-        idleTimeoutMillis: (pool_timeout - 1) * 1000,
-        log: (str, level) => {
-            level = (level === 'verbose') ? 'debug' : level;
-            logger['log' + level](`[smtp_client_pool] [${name}] ${str}`);
-        }
-    });
+    let pool;
 
-    const acquire = pool.acquire;
-    pool.acquire = (callback, priority) => {
-        function callback_wrapper (err, smtp_client) {
+    const factory = {
+        create: function () {
+            return new Promise((resolve, reject) => {
+                const smtp_client = new SMTPClient(port, host, connect_timeout, pool_timeout);
+                logger.logdebug(`[smtp_client_pool] uuid=${smtp_client.uuid} host=${host}` +
+                    ` port=${port} pool_timeout=${pool_timeout} created`);
+                resolve(smtp_client);
+            })
+        },
+        destroy: function (smtp_client) {
+            return new Promise((resolve, reject) => {
+                logger.logdebug(`[smtp_client_pool] ${smtp_client.uuid} destroyed, state={smtp_client.state}`);
+                smtp_client.state = STATE.DESTROYED;
+                smtp_client.socket.destroy();
+
+                if (pool.getPoolSize() === 0) {       // when pool is empty
+                    delete server.notes.pool[name];   // remove pool object
+                }
+            })
+        },
+    }
+
+    const config = {
+        idleTimeoutMillis: (pool_timeout - 1) * 1000,
+        max: cfg.max_connections || 1000,
+    }
+
+    pool = generic_pool.createPool(factory, config);
+    pool.acquire()
+        .then(function (smtp_client) {
             smtp_client.pool = pool;
             smtp_client.state = STATE.ACTIVE;
-            callback(err, smtp_client);
-        }
-        acquire.call(pool, callback_wrapper, priority);
-    };
+        })
+        .catch(function (err) {
+            logger.logerror(`[smtp_client_pool] ERROR ${err}`);
+            // handle error - this is generally a timeout or maxWaitingClients error
+        });
+
     server.notes.pool[name] = pool;
     return pool;
 }
@@ -341,7 +345,7 @@ exports.get_pool = (server, port, host, cfg) => {
 // Get a smtp_client for the given attributes.
 exports.get_client = (server, callback, port, host, cfg) => {
     const pool = exports.get_pool(server, port, host, cfg);
-    pool.acquire(callback);
+    pool.acquire().then(callback).catch(callback);
 }
 
 
@@ -407,8 +411,7 @@ exports.get_client_plugin = (plugin, connection, c, callback) => {
     const hostport = get_hostport(connection, connection.server, c);
 
     const pool = exports.get_pool(connection.server, hostport.port, hostport.host, c);
-
-    pool.acquire((err, smtp_client) => {
+    pool.acquire().then(smtp_client => {
         connection.logdebug(plugin, `Got smtp_client: ${smtp_client.uuid}`);
 
         let secured = false;
@@ -519,8 +522,8 @@ exports.get_client_plugin = (plugin, connection, c, callback) => {
             }
         }
 
-        callback(err, smtp_client);
-    });
+        callback(null, smtp_client);
+    }).catch(callback);
 }
 
 function get_hostport (connection, server, cfg) {

@@ -19,7 +19,7 @@
     "address-rfc2822"       : "^2.0.0",
     "async"                 : "~3.1.0",
     "daemon"                : "~1.1.0",
-    "generic-pool"          : "~2.5.0",
+    "generic-pool"          : "~3.4.2",
     "iconv"                 : "~2.3.0",
     "ipaddr.js"             : "~1.9.0",
     "nopt"                  : "~4.0.1",
