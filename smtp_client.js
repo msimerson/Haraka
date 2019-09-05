@@ -301,7 +301,7 @@ exports.get_pool = (server, port, host, cfg) => {
     let pool;
 
     const factory = {
-        create: function () {
+        create () {
             return new Promise((resolve, reject) => {
                 const smtp_client = new SMTPClient(port, host, connect_timeout, pool_timeout);
                 logger.logdebug(`[smtp_client_pool] uuid=${smtp_client.uuid} host=${host}` +
@@ -309,7 +309,7 @@ exports.get_pool = (server, port, host, cfg) => {
                 resolve(smtp_client);
             })
         },
-        destroy: function (smtp_client) {
+        destroy (smtp_client) {
             return new Promise((resolve, reject) => {
                 logger.logdebug(`[smtp_client_pool] ${smtp_client.uuid} destroyed, state={smtp_client.state}`);
                 smtp_client.state = STATE.DESTROYED;
