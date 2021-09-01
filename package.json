@@ -24,7 +24,7 @@
     "address-rfc2822"       : "^2.0.5",
     "async"                 : "~3.2.0",
     "daemon"                : "~1.1.0",
-    "generic-pool"          : "~2.5.4",
+    "generic-pool"          : "~3.8.2",
     "iconv"                 : "~3.0.0",
     "ipaddr.js"             : "~2.0.0",
     "libqp"                 : "^1.1.0",
