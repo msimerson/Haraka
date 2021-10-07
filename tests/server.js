@@ -79,7 +79,7 @@ exports.load_smtp_ini = {
     setUp : _set_up,
     'saves settings to Server.cfg' (test) {
         test.expect(3);
-        this.server.load_smtp_ini();
+        this.server.config.config.load_smtp_ini();
         // console.log(this.server.cfg);
         const c = this.server.cfg.main;
         test.notEqual(c.daemonize, undefined);
@@ -171,7 +171,7 @@ function _setupServer (test, ip_port, done) {
     test.server.plugins.config = test.config.module_config(test_cfg_path);
     // test.server.outbound.config = test.config.module_config(test_cfg_path);
 
-    test.server.load_smtp_ini();
+    test.server.config.load_smtp_ini();
     test.server.cfg.main.listen = ip_port;
     test.server.cfg.main.smtps_port = 2465;
     // console.log(test.server.cfg);
