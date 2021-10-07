@@ -1,9 +1,6 @@
 'use strict'
 
-const config = module.exports = require('haraka-config');
-const logger = require('./logger');
-
-exports.load_smtp_ini = () => {
+exports.load_smtp_ini = (config, logger) => {
 
     const cfg = config.get('smtp.ini', {
         booleans: [
@@ -16,7 +13,7 @@ exports.load_smtp_ini = () => {
             '+headers.clean_auth_results',
         ],
     }, () => {
-        this.load_smtp_ini();
+        this.load_smtp_ini(config, logger);
     });
 
     if (cfg.main.nodes === undefined) {
@@ -51,10 +48,10 @@ exports.load_smtp_ini = () => {
     return cfg;
 }
 
-exports.load_http_ini = () => {
+exports.load_http_ini = (config) => {
 
     const cfg = config.get('http.ini', () => {
-        this.load_http_ini();
+        this.load_http_ini(config);
     });
 
     return cfg;

@@ -269,7 +269,7 @@ exports.ensure_queue_dir = () => {
 
     logger.logdebug(`[outbound] Creating queue directory ${queue_dir}`);
     const base_config = require('../config');
-    const smtpini = base_config.load_smtp_ini()
+    const smtpini = base_config.load_smtp_ini(config)
     try {
         fs.mkdirSync(queue_dir, 493); // 493 == 0755
 

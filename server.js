@@ -16,22 +16,21 @@ const cluster     = require('cluster');
 const constants   = require('haraka-constants');
 const endpoint    = require('./endpoint');
 
+const logger      = require('./logger');
+// Need these here so we can run hooks
+logger.add_log_methods(exports, 'server');
+
 const Server      = exports;
-Server.logger     = require('./logger');
+Server.logger     = logger;
 Server.config     = require('haraka-config');
 Server.plugins    = require('./plugins');
 Server.notes      = {};
 
-const logger      = Server.logger;
-const base_config = require('./config');
-
-// Need these here so we can run hooks
-logger.add_log_methods(Server, 'server');
-
+Server.base_config = require('./config');
 Server.listeners = [];
 
-Server.cfg = base_config.load_smtp_ini();
-Server.http = { cfg: base_config.load_http_ini().main };
+Server.cfg = Server.base_config.load_smtp_ini(Server.config, logger);
+Server.http = { cfg: Server.base_config.load_http_ini(Server.config).main };
 
 Server.daemonize = function () {
     const c = this.cfg.main;
