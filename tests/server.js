@@ -79,7 +79,7 @@ exports.load_smtp_ini = {
     setUp : _set_up,
     'saves settings to Server.cfg' (test) {
         test.expect(3);
-        this.server.base_config.load_smtp_ini(this.configthis.config);
+        this.server.base_config.load_smtp_ini(this.config);
         // console.log(this.server.cfg);
         const c = this.server.cfg.main;
         test.notEqual(c.daemonize, undefined);
