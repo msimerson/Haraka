@@ -9,6 +9,8 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    allow:
+      - dependency-type: production
 
   - package-ecosystem: "docker"
     # Look for a `Dockerfile` in the `root` directory
