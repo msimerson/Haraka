@@ -1,6 +1,7 @@
-const amqp = require('amqp');
-const logger = require('./logger');
 
+const amqp = require('amqp');
+
+let logger;
 let rabbitqueue;
 let exchangeName;
 let queueName;
@@ -12,7 +13,9 @@ exports.exchangeMapping = {}
 
 //This method registers the hook and try to initialize the connection to rabbitmq server for later use.
 exports.register = function () {
+    logger = this.haraka_require('logger');
     logger.logdebug("About to connect and initialize queue object");
+
     this.init_rabbitmq_server();
     logger.logdebug(`Finished initiating : ${exports.exchangeMapping[exchangeName + queueName]}`);
 }

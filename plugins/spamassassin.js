@@ -1,7 +1,7 @@
 'use strict';
 // Call spamassassin via spamd
 
-const sock  = require('./line_socket');
+const sock  = haraka_require('line_socket');
 const utils = require('haraka-utils');
 
 exports.register = function () {

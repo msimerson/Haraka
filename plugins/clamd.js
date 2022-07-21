@@ -1,6 +1,6 @@
 // clamd
 
-const sock = require('./line_socket');
+
 const utils = require('haraka-utils');
 
 exports.load_excludes = function () {
@@ -145,6 +145,8 @@ exports.load_clamd_ini = function () {
 
 exports.register = function () {
     const plugin = this;
+    plugin.line_socket = plugin.haraka_require('line_socket');
+
     plugin.load_excludes();
     plugin.load_clamd_ini();
 }
@@ -201,7 +203,7 @@ exports.hook_data_post = function (next, connection) {
         }
         const host = hosts.shift();
         connection.logdebug(plugin, `trying host: ${host}`);
-        const socket = new sock.Socket();
+        const socket = new plugin.line_socket.Socket();
 
         socket.on('timeout', () => {
             socket.destroy();

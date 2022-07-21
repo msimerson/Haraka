@@ -1,14 +1,18 @@
 // spf
 
-const SPF = require('./spf').SPF;
 const net_utils = require('haraka-net-utils');
 const DSN = require('haraka-dsn');
 
 exports.register = function () {
     const plugin = this;
 
+    plugin.SPF = plugin.haraka_require('spf').SPF;
+    plugin.nu = net_utils;   // so tests can set public_ip
+
     // Override logging in SPF module
-    SPF.prototype.log_debug = str => plugin.logdebug(str);
+    plugin.SPF.prototype.log_debug = function (str) {
+        return plugin.logdebug(str);
+    }
 
     plugin.load_spf_ini();
 
@@ -18,8 +22,6 @@ exports.register = function () {
 
 exports.load_spf_ini = function () {
     const plugin = this;
-    plugin.nu = net_utils;   // so tests can set public_ip
-    plugin.SPF = SPF;
 
     plugin.cfg = plugin.config.get('spf.ini', {
         booleans: [
@@ -109,8 +111,8 @@ exports.helo_spf = function (next, connection, helo) {
     if (results && results.domain === helo) return next();
 
     let timeout = false;
-    const spf = new SPF();
-    const timer = setTimeout(() => {
+    const spf = new plugin.SPF();
+    const timer = setTimeout(function () {
         timeout = true;
         connection.loginfo(plugin, 'timeout');
         return next();
@@ -162,7 +164,7 @@ exports.hook_mail = function (next, connection, params) {
 
     const mfrom = params[0].address();
     const host = params[0].host;
-    let spf = new SPF();
+    let spf = new plugin.SPF();
     let auth_result;
 
     if (connection.notes?.spf_helo) {
@@ -242,8 +244,8 @@ exports.hook_mail = function (next, connection, params) {
                 if (!my_public_ip) {
                     return ch_cb(new Error(`failed to discover public IP`));
                 }
-                spf = new SPF();
-                spf.check_host(my_public_ip, host, mfrom, (er, r) => {
+                spf = new plugin.SPF();
+                spf.check_host(my_public_ip, host, mfrom, function (er, r) {
                     ch_cb(er, r, my_public_ip);
                 });
                 return;

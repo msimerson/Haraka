@@ -8,3 +8,4 @@ globals:
   DENYDISCONNECT: true
   DENYSOFTDISCONNECT: true
   NEXT_HOOK: true
+  haraka_require: true

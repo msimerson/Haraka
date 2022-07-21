@@ -1,12 +1,13 @@
 // Proxy AUTH requests selectively by domain
-const sock  = require('./line_socket');
 const utils = require('haraka-utils');
+
 const smtp_regexp = /^([0-9]{3})([ -])(.*)/;
 
 exports.register = function () {
     const plugin = this;
     plugin.inherits('auth/auth_base');
     plugin.load_tls_ini();
+    plugin.line_socket = this.haraka_require('line_socket');
 }
 
 exports.load_tls_ini = function () {
@@ -16,8 +17,7 @@ exports.load_tls_ini = function () {
     });
 }
 
-
-exports.hook_capabilities = (next, connection) => {
+exports.hook_capabilities = function (next, connection) {
     if (connection.tls.enabled) {
         const methods = [ 'PLAIN', 'LOGIN' ];
         connection.capabilities.push(`AUTH ${methods.join(' ')}`);
@@ -63,7 +63,7 @@ exports.try_auth_proxy = function (connection, hosts, user, passwd, cb) {
     let secure = false;
 
     const hostport = host.split(/:/);
-    const socket = sock.connect(((hostport[1]) ? hostport[1] : 25), hostport[0]);
+    const socket = self.line_socket.connect(((hostport[1]) ? hostport[1] : 25), hostport[0]);
     connection.logdebug(self, `attempting connection to host=${hostport[0]} port=${(hostport[1]) ? hostport[1] : 25}`);
     socket.setTimeout(30 * 1000);
     socket.on('connect', () => { });

@@ -2,29 +2,37 @@
 // TLS is built into Haraka. This plugin conditionally advertises STARTTLS.
 // see 'haraka -h tls' for help
 
-const tls_socket = require('./tls_socket');
-
 // exported so tests can override config dir
 exports.net_utils = require('haraka-net-utils');
 
 exports.register = function () {
-    tls_socket.load_tls_ini()
+    this.tls_socket = this.haraka_require('tls_socket');
 
-    if (tls_socket.cfg.redis.disable_for_failed_hosts) this.logdebug('Will disable STARTTLS for failing TLS hosts')
+    if (this.tls_socket.cfg.redis.disable_for_failed_hosts) this.logdebug('Will disable STARTTLS for failing TLS hosts')
+
+    this.tls_socket.load_tls_ini()
 
     this.register_hook('capabilities',         'advertise_starttls')
     this.register_hook('unrecognized_command', 'upgrade_connection')
 }
 
-exports.shutdown = () => {
-    if (tls_socket.shutdown) tls_socket.shutdown();
+exports.shutdown = function () {
+    if (this.tls_socket.shutdown) this.tls_socket.shutdown();
+}
+
+exports.load_tls_ini = function () {
+    const plugin = this;
+
+    plugin.cfg = plugin.tls_socket.load_tls_ini(function () {
+        plugin.load_tls_ini();
+    });
 }
 
 exports.advertise_starttls = function (next, connection) {
     const plugin = this;
 
     // if no TLS setup incomplete/invalid, don't advertise
-    if (!tls_socket.tls_valid) {
+    if (!plugin.tls_socket.tls_valid) {
         plugin.logerror('no valid TLS config');
         return next();
     }
@@ -32,7 +40,7 @@ exports.advertise_starttls = function (next, connection) {
     /* Caution: do not advertise STARTTLS if already TLS upgraded */
     if (connection.tls.enabled) return next();
 
-    if (plugin.net_utils.ip_in_list(tls_socket.cfg.no_tls_hosts, connection.remote.ip)) {
+    if (plugin.net_utils.ip_in_list(plugin.tls_socket.cfg.no_tls_hosts, connection.remote.ip)) {
         return next();
     }
 
@@ -43,12 +51,12 @@ exports.advertise_starttls = function (next, connection) {
     }
 
     // check if local port is excluded from starttls advertisement
-    if (tls_socket.cfg.main.no_starttls_ports.includes(connection.local.port)) return next();
+    if (this.tls_socket.cfg.main.no_starttls_ports.includes(connection.local.port)) return next();
 
     // exclude port 587 from NO-GO
     if (connection.local.port === 587) return enable_tls();
 
-    if (!tls_socket.cfg.redis || !server.notes.redis) {
+    if (!plugin.tls_socket.cfg.redis || !server.notes.redis) {
         return enable_tls();
     }
 
@@ -69,10 +77,10 @@ exports.advertise_starttls = function (next, connection) {
 
 exports.set_notls = function (connection) {
 
-    if (!tls_socket.cfg.redis.disable_for_failed_hosts) return;
+    if (!this.tls_socket.cfg.redis.disable_for_failed_hosts) return;
     if (!server.notes.redis) return;
 
-    const expiry = tls_socket.cfg.redis.disable_inbound_expiry || 3600;
+    const expiry = this.tls_socket.cfg.redis.disable_inbound_expiry || 3600;
 
     this.lognotice(connection, `STARTTLS failed. Marking ${connection.remote.ip} as non-TLS host for ${expiry} seconds`);
 

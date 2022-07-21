@@ -1,6 +1,10 @@
 // process_title
 
-const outbound = require('./outbound');
+let outbound;
+
+exports.hook_register = function () {
+    outbound = this.haraka_require('outbound');
+}
 
 function setupInterval (title, server) {
     // Set up a timer to update title

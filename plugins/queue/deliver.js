@@ -2,12 +2,10 @@
 // automatically just like this. It is kept here for backwards compatibility
 // purposes only.
 
-const outbound = require('./outbound');
-
 exports.hook_queue_outbound = (next, connection) => {
     if (!connection?.relaying) {
         return next(); // we're not relaying so don't deliver outbound
     }
 
-    outbound.send_email(connection?.transaction, next);
+    this.haraka_require('outbound').send_email(connection.transaction, next);
 }

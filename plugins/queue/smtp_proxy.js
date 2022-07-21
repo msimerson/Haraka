@@ -4,10 +4,10 @@
 // and passes back any errors seen on the ongoing server to the
 // originating server.
 
-const smtp_client_mod = require('./smtp_client');
-
 exports.register = function () {
     const plugin = this;
+
+    plugin.smtp_client_mod = plugin.haraka_require('smtp_client');
 
     plugin.load_smtp_proxy_ini();
 
@@ -40,7 +40,7 @@ exports.hook_mail = function (next, connection, params) {
     connection.loginfo(plugin, `forwarding to ${
         c.forwarding_host_pool ? "configured forwarding_host_pool" : `${c.host}:${c.port}`}`
     );
-    smtp_client_mod.get_client_plugin(plugin, connection, c, (err, smtp_client) => {
+    plugin.smtp_client_mod.get_client_plugin(plugin, connection, c, function (err, smtp_client) {
         connection.notes.smtp_client = smtp_client;
         smtp_client.next = next;
 

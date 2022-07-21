@@ -1,19 +1,11 @@
 
-const dkim = require('./dkim');
-
-const DKIMVerifyStream = dkim.DKIMVerifyStream;
-
-const plugin = exports;
-
-dkim.DKIMObject.prototype.debug = str => {
-    plugin.logdebug(str);
-}
-
-DKIMVerifyStream.prototype.debug = str => {
-    plugin.logdebug(str);
-}
-
 exports.register = function () {
+    this.dkim = this.haraka_require('dkim');
+
+    this.dkim.DKIMObject.prototype.debug = (str) => {
+        this.logdebug(str);
+    }
+
     this.load_config()
 }
 
@@ -21,7 +13,7 @@ exports.load_config = function () {
     const cfg = this.config.get('dkim_verify.ini', {}, () => this.load_config())
 
     this.cfg = Object.assign({}, cfg.main, {
-        timeout: plugin.timeout ? plugin.timeout - 1 : 0
+        timeout: this.timeout ? this.timeout - 1 : 0
     })
 }
 
@@ -29,8 +21,7 @@ exports.hook_data_post = function (next, connection) {
     const self = this;
     const txn = connection?.transaction;
     if (!txn) return next();
-
-    const verifier = new DKIMVerifyStream(this.cfg, (err, result, results) => {
+    const verifier = new self.dkim.DKIMVerifyStream(this.cfg, (err, result, results) => {
         if (err) {
             txn.results.add(self, { err });
             return next();

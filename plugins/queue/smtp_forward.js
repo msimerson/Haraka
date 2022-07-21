@@ -6,10 +6,12 @@
 
 const url = require('url');
 
-const smtp_client_mod = require('./smtp_client');
 
 exports.register = function () {
     const plugin = this;
+
+    plugin.smtp_client_mod = plugin.haraka_require('smtp_client');
+
     plugin.load_errs = [];
 
     plugin.load_smtp_forward_ini();
@@ -244,7 +246,7 @@ exports.queue_forward = function (next, connection) {
     const cfg = plugin.get_config(conn);
     if (!plugin.forward_enabled(conn, cfg)) return next();
 
-    smtp_client_mod.get_client_plugin(plugin, connection, cfg, (err, smtp_client) => {
+    plugin.smtp_client_mod.get_client_plugin(plugin, connection, cfg, function (err, smtp_client) {
         smtp_client.next = next;
 
         let rcpt = 0;

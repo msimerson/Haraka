@@ -6,11 +6,12 @@
 const fs   = require('fs');
 const path = require('path');
 
-const sock = require('./line_socket');
 const smtp_regexp = /^([0-9]{3})([ -])(.*)/;
 
 exports.register = function () {
     const plugin = this;
+
+    plugin.line_socket = plugin.haraka_require('line_socket');
 
     plugin.load_avg_ini();
 }
@@ -51,7 +52,7 @@ exports.hook_data_post = function (next, connection) {
 
     ws.once('close', () => {
         const start_time = Date.now();
-        const socket = new sock.Socket();
+        const socket = new plugin.line_socket.Socket();
         socket.setTimeout((plugin.cfg.main.connect_timeout || 10) * 1000);
         let connected = false;
         let command = 'connect';
